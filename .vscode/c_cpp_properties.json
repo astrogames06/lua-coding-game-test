@@ -6,7 +6,10 @@
         "${workspaceFolder}/**",
         "C:/Users/jebba/emsdk/upstream/emscripten/system/include",
         "C:/Users/jebba/emsdk/upstream/emscripten/system/include/SDL",
-        "C:/Users/jebba/emsdk/upstream/emscripten/system/include/emscripten"
+        "C:/Users/jebba/emsdk/upstream/emscripten/system/include/emscripten",
+        "/Users/sher.jesse/Library/CloudStorage/OneDrive-EmanuelSchool/Desktop/CODE_FILES/emsdk/upstream/emscripten/system/include",
+        "/Users/sher.jesse/Library/CloudStorage/OneDrive-EmanuelSchool/Desktop/CODE_FILES/emsdk//upstream/emscripten/system/include/SDL",
+        "/Users/sher.jesse/Library/CloudStorage/OneDrive-EmanuelSchool/Desktop/CODE_FILES/emsdk/upstream/emscripten/system/include/emscripten",
       ],
     }
   ],

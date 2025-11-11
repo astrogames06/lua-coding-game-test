@@ -46,7 +46,8 @@
     </head>
     <body>
         <div class="container">
-            <textarea id="editor">print("Hello, Lua!")</textarea>
+            <textarea id="editor">function run_game()
+end</textarea>
             <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
         </div>
         <button id="run-btn">run</button>
@@ -64,6 +65,16 @@
 
                     run_btn.addEventListener('click', () => {
                         Module.RunLua(CodeMirror.getValue().toString());
+                        Module.SetGame();
+
+                        if (Module.LuaIsRunning())
+                        {
+                            run_btn.textContent = "Running";
+                        }
+                        else
+                        {
+                            run_btn.textContent = "Stop!";
+                        }
                     })
                 },
                 canvas: (function() {
