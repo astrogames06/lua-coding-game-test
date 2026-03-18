@@ -1,2 +1,145 @@
-<!doctypehtml><html lang=en-us><head><meta charset=utf-8><meta content="text/html; charset=utf-8"http-equiv=Content-Type><title>web lua</title><link href=https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css rel=stylesheet><link href=https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/midnight.min.css rel=stylesheet><script src=https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/lua/lua.min.js></script><style>body{margin:0;background-color:#d6d6d6}.container{display:flex;flex-direction:row;align-items:flex-start}.CodeMirror{width:50%;height:450px;border-radius:10px;margin:10px 10px 10px 10px}#canvas{width:50%;margin:10px 10px 10px 10px;border-radius:10px}#run-btn{margin:10px 10px 10px 10px;border:none;background-color:#00008b;color:#fff;border-radius:10px;padding:10px 10px 10px 10px}</style><script src=https://cdn.jsdelivr.net/gh/eligrey/FileSaver.js/dist/FileSaver.min.js></script><script>function saveFileFromMEMFSToDisk(e,a){var i,o=FS.readFile(e);i=new Blob([o.buffer],{type:"application/octet-binary"}),saveAs(i,a)}</script></head><body><div class=container><textarea id=editor>function run_game()
-end</textarea><canvas class=emscripten id=canvas oncontextmenu=event.preventDefault() tabindex=-1></canvas></div><button id=run-btn>run</button><script>window.CodeMirror=CodeMirror.fromTextArea(document.getElementById("editor"),{mode:"lua",lineNumbers:!0,theme:"midnight",tabSize:4}),window.Module={onRuntimeInitialized:function(){let e=document.getElementById("run-btn");e.addEventListener("click",(()=>{Module.RunLua(CodeMirror.getValue().toString()),Module.SetGame(),Module.LuaIsRunning()?e.textContent="Stop!":e.textContent="run"}))},canvas:document.getElementById("canvas")}</script><script src=index.js async></script></body></html>
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>web lua</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/midnight.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/lua/lua.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+
+        body { margin: 0; background-color: rgb(214, 214, 214); }
+        .container {
+            display: flex;
+            flex-direction: row;
+        }
+        .bottom-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            margin-right: 10px;
+        }
+        .CodeMirror {
+            width: 50vw;
+            height: 450px;
+            border-radius: 10px;
+            margin: 10px 10px 10px 10px;
+        }
+        #canvas {
+            margin: 10px 10px 10px 10px;
+            border-radius: 10px;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+        #canvas:focus { outline: none !important; }
+        #run-btn
+        {
+            margin: 10px 10px 10px 10px;
+            border: none;
+            background-color: darkblue;
+            color: white;
+            border-radius: 10px;
+            padding: 10px 10px 10px 10px;
+            height: fit-content;
+        }
+
+        #output
+        {
+            font-family: "JetBrains Mono", monospace;
+            display: flex;
+            overflow: auto;
+            justify-self: center;
+            background-color: black;
+            color: lime;
+            resize: none;
+            border: none;
+            border-radius: 25px;
+            padding: 10px;
+            width: 800px;
+            outline: none !important;
+        }
+        #output::-webkit-scrollbar-track
+        {
+            background: white;
+        }
+        .output-wrapper
+        {
+            border-radius: 25px;
+            overflow: hidden;
+        }
+        #output::-webkit-scrollbar {
+            width: 12px;
+        }
+        #output::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #output::-webkit-scrollbar-thumb {
+            background: white;
+            border-radius: 15px;
+        }
+    </style>
+    </head>
+    <body>
+        <div class="container">
+            <textarea id="editor">function run_game()
+end</textarea>
+            <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+        </div>
+        <div class="bottom-container">
+            <button id="run-btn">run</button>
+
+            <div class="output-wrapper">
+                <textarea id="output" rows="20" cols="80" readonly></textarea>
+            </div>
+        </div>
+        <script>
+            window.CodeMirror = CodeMirror.fromTextArea(document.getElementById("editor"), {
+                mode: "lua",
+                lineNumbers: true,
+                theme: "midnight",
+                tabSize: 4
+            });
+
+            window.Module = {
+                onRuntimeInitialized: function () {
+                    let run_btn = document.getElementById('run-btn');
+
+                    run_btn.addEventListener('click', () => {
+                        Module.RunLua(CodeMirror.getValue().toString());
+                        Module.SetGame();
+
+                        if (!Module.LuaIsRunning())
+                        {
+                            run_btn.textContent = "run";
+                        }
+                        else
+                        {
+                            run_btn.textContent = "Stop!";
+                        }
+                    })
+                },
+                print: (function() {
+                    var element = document.getElementById('output');
+                    if (element) element.value = ''; // clear browser cache
+                    return function(text) {
+                        if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+                        console.log(text);
+                        if (element) {
+                          element.value += text + "\n";
+                          element.scrollTop = element.scrollHeight; // focus on bottom
+                        }
+                    };
+                })(),
+                canvas: (function() {
+                    var canvas = document.getElementById('canvas');
+                    return canvas;
+                })(),
+            };
+        </script>
+        <script src="index.js"></script>
+    </body>
+</html>
