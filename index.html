@@ -115,7 +115,7 @@ end</textarea>
             <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
         </div>
         <div class="bottom-container">
-            <button id="run-btn">run</button>
+            <button id="run-btn"><img src="icons/play.svg" alt="play"></button>
 
             <div class="output-wrapper">
                 <h1><img src="icons/terminal.svg" alt="terminal">Terminal</h1>
@@ -133,6 +133,7 @@ end</textarea>
             window.Module = {
                 onRuntimeInitialized: function () {
                     let run_btn = document.getElementById('run-btn');
+                    let run_btn_icon = run_btn.firstChild;
 
                     run_btn.addEventListener('click', () => {
                         Module.RunLua(CodeMirror.getValue().toString());
@@ -140,11 +141,13 @@ end</textarea>
 
                         if (!Module.LuaIsRunning())
                         {
-                            run_btn.textContent = "run";
+                            // run_btn.textContent = "Run";
+                            run_btn_icon.src = "icons/play.svg";
                         }
                         else
                         {
-                            run_btn.textContent = "Stop!";
+                            // run_btn.textContent = "Stop!";
+                            run_btn_icon.src = "icons/stop.svg";
                         }
                     })
                 },
