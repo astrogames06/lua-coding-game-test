@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sprite Picker</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    #spriteGallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, 80px);
+      gap: 10px;
+    }
+    .sprite {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border 0.2s;
+      filter: invert(1);
+    }
+    .sprite:hover {
+      border-color: #888;
+    }
+    .selected {
+      border-color: #007bff;
+    }
+    #selectedSprite {
+      margin-top: 20px;
+      width: 150px;
+      height: 150px;
+      border: 2px solid #007bff;
+      border-radius: 8px;
+      filter: invert(1);
+    }
+  </style>
+</head>
+<body>
+
+<h2>Choose a Sprite</h2>
+<div id="spriteGallery"></div>
+
+<h3>Selected Sprite:</h3>
+<img id="selectedSprite" src="">
+
+<script>
+  // List your assets manually
+  const sprites = [
+    "icons/play.svg",
+    "icons/stop.svg",
+    "icons/terminal.svg",
+  ];
+
+  const gallery = document.getElementById("spriteGallery");
+  const selected = document.getElementById("selectedSprite");
+
+  let currentSelected = null;
+
+  sprites.forEach(src => {
+    const img = document.createElement("img");
+    img.src = src;
+    img.classList.add("sprite");
+    gallery.appendChild(img);
+
+    img.addEventListener("click", () => {
+      if(currentSelected) currentSelected.classList.remove("selected");
+      img.classList.add("selected");
+      currentSelected = img;
+      selected.src = src;
+    });
+  });
+
+  // Set default selected
+  if(sprites.length > 0) {
+    selected.src = sprites[0];
+    gallery.children[0].classList.add("selected");
+    currentSelected = gallery.children[0];
+  }
+</script>
+
+</body>
+</html>

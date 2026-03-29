@@ -143,6 +143,9 @@ end</textarea>
                         {
                             // run_btn.textContent = "Run";
                             run_btn_icon.src = "icons/play.svg";
+                            let output = document.getElementById('output');
+                            output.value = "";
+                            Module.RestartGame();
                         }
                         else
                         {
