@@ -1,116 +1,28 @@
 <!doctype html>
 <html lang="en-us">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>web lua</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/midnight.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/lua/lua.min.js"></script>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>web lua</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/midnight.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/lua/lua.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
-
-        body { margin: 0; background-color: rgb(214, 214, 214); }
-        .container {
-            display: flex;
-            flex-direction: row;
-        }
-        .bottom-container {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            margin-right: 10px;
-        }
-        .CodeMirror {
-            font-family: "JetBrains Mono", monospace;
-            font-size: small;
-            width: 50vw;
-            height: 450px;
-            border-radius: 10px;
-            margin: 10px 10px 10px 10px;
-        }
-        #canvas {
-            margin: 10px 10px 10px 10px;
-            border-radius: 10px;
-            image-rendering: pixelated;
-            image-rendering: crisp-edges;
-        }
-        #canvas:focus { outline: none !important; }
-        #run-btn
-        {
-            margin: 10px 10px 10px 10px;
-            border: none;
-            background-color: darkblue;
-            color: white;
-            border-radius: 10px;
-            padding: 10px 10px 10px 10px;
-            height: fit-content;
-        }
-
-        #output
-        {
-            font-family: "JetBrains Mono", monospace;
-            display: flex;
-            overflow: auto;
-            justify-self: center;
-            background-color: black;
-            color: lime;
-            resize: none;
-            border: 1px solid #313131; 
-            box-shadow: inset 0 0 6px rgba(0,0,0,0.6);
-            margin: 10px;
-            border-radius: 25px;
-            padding: 10px;
-            width: 800px;
-            outline: none !important;
-            height: 250px;
-        }
-        #output::-webkit-scrollbar-track
-        {
-            background: white;
-        }
-        .output-wrapper
-        {
-            border-radius: 25px;
-            overflow: hidden;
-            background-color: black;
-        }
-        #output::-webkit-scrollbar {
-            width: 12px;
-        }
-        #output::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        #output::-webkit-scrollbar-thumb {
-            background: white;
-            border-radius: 15px;
-        }
-        .output-wrapper h1
-        {
-            background-color: black;
-            color: lime;
-            overflow: auto;
-            font-family: "JetBrains Mono", monospace;
-            margin-left: 10px;
-            padding: 0px;
-            display: flex;
-            align-items: center;
-            font-size: large;
-        }
-        .output-wrapper h1 img
-        {
-            width: 30px;
-            margin-right: 20px;
-            margin-left: 10px;
-            filter: brightness(0) saturate(100%) invert(67%) sepia(41%) saturate(7169%) hue-rotate(84deg) brightness(120%) contrast(121%);
-        }
-    </style>
+        <link rel="stylesheet" href="style.css">
     </head>
     <body>
         <div class="container">
-            <textarea id="editor">function run_game()
+            <textarea id="editor">-- Game Code :)
+
+function _init()
+end
+
+function _update()
+end
+
+function _draw()
 end</textarea>
             <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
         </div>
@@ -123,36 +35,48 @@ end</textarea>
             </div>
         </div>
         <script>
-            window.CodeMirror = CodeMirror.fromTextArea(document.getElementById("editor"), {
+            window.CodeEditor = CodeMirror.fromTextArea($('#editor')[0], {
                 mode: "lua",
                 lineNumbers: true,
                 theme: "midnight",
                 tabSize: 4
             });
 
+            let saved_code = localStorage.getItem("code");
+            if (saved_code)
+            {
+                window.CodeEditor.setValue(JSON.parse(saved_code));
+            }
+
+            window.CodeEditor.on("change", function(cm) {
+                localStorage.setItem("code", JSON.stringify(window.CodeEditor.getValue().toString()));
+                console.log(cm.getValue());
+            });
+
             window.Module = {
                 onRuntimeInitialized: function () {
-                    let run_btn = document.getElementById('run-btn');
-                    let run_btn_icon = run_btn.firstChild;
+                    
+                    let run_btn = $('#run-btn');
+                    let run_btn_icon = run_btn.find('img');
 
-                    run_btn.addEventListener('click', () => {
-                        Module.RunLua(CodeMirror.getValue().toString());
-                        Module.SetGame();
+                    run_btn.on('click', function() {
+                        Module.cpp_run_lua_code(window.CodeEditor.getValue().toString());
+                        Module.cpp_set_lua_game_loop();
 
-                        if (!Module.LuaIsRunning())
+                        if (!Module.cpp_lua_is_running())
                         {
                             // run_btn.textContent = "Run";
-                            run_btn_icon.src = "icons/play.svg";
-                            let output = document.getElementById('output');
-                            output.value = "";
-                            Module.RestartGame();
+                            run_btn_icon.attr('src', "icons/play.svg");
+                            Module.cpp_restart_game();
                         }
                         else
                         {
                             // run_btn.textContent = "Stop!";
-                            run_btn_icon.src = "icons/stop.svg";
+                            run_btn_icon.attr('src', "icons/stop.svg");
                         }
-                    })
+                    });
+
+                    
                 },
                 print: (function() {
                     var element = document.getElementById('output');

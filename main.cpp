@@ -16,66 +16,100 @@
     #include <emscripten/bind.h>
 #endif
 
+#include "lua_definition.hpp"
+
 sol::state lua;
-sol::function game;
+sol::function lua_game_loop_init;
+sol::function lua_game_loop_update;
+sol::function lua_game_loop_draw;
 
 const int WIDTH = 850;
 const int HEIGHT = 450;
-Vector2 pos;
 
-void Move(int x, int y)
-{
-    pos.x += x;
-    pos.y += y;
-}
-void BONG(int x, int y)
-{
-	DrawRectangle(x, y, 50, 50, BLUE);
-}
-
-void setup_lua()
-{
-	// open some common libraries
-	lua.open_libraries(sol::lib::base, sol::lib::package);
-	lua.script("print('LUA SCRIPT RAN')");
-	lua.set_function("move_plr", Move);
-	lua.set_function("BONG", BONG);
-}
-void set_game()
-{
-	if (lua["run_game"].valid()) {
-		game = lua["run_game"];
-	} else {
-		std::cout << "Lua function run_game not defined!" << std::endl;
-	}
-}
 bool ran_lua = false;
 bool running = false;
-bool lua_is_running() { return running; }
-void run_lua(const std::string& code)
+bool LuaIsRunning() { return running; }
+
+void SetUpLua()
 {
-    sol::protected_function_result result = lua.safe_script(code, &sol::script_pass_on_error);
-    
-    if (!result.valid())
-    {
-        sol::error err = result;
-        std::cout << "Lua error caught: " << err.what() << std::endl;
-    }
+	lua.open_libraries(sol::lib::base, sol::lib::package);
+
+	sol::protected_function_result result =
+		lua.safe_script("print('LUA SCRIPT RAN')", sol::script_pass_on_error);
+
+	if (!result.valid())
+	{
+		sol::error err = result;
+		std::cout << "Lua init error caught: " << err.what() << std::endl;
+	}
+
+	// Where the lua functions should be set
+	DefineLuaFunctions();
+	DefineLuaGlobals();
+}
+
+void SetLuaGameLoop()
+{
+	if (lua["_init"].valid()) {
+		lua_game_loop_init = lua["_init"];
+	} else {
+		std::cout << "Lua function '_init' not found on first go!" << std::endl;
+	}
+
+	if (lua["_update"].valid()) {
+		lua_game_loop_update = lua["_update"];
+	} else {
+		std::cout << "Lua function '_update' not found on first go!" << std::endl;
+	}
+
+	if (lua["_draw"].valid()) {
+		lua_game_loop_draw = lua["_draw"];
+	} else {
+		std::cout << "Lua function '_draw' not found on first go!" << std::endl;
+	}
+
+	// Run Init Function
+	if (ran_lua && running)
+	{
+		if (lua_game_loop_init.valid())
+		{
+			sol::protected_function_result result = lua_game_loop_init();
+
+			if (!result.valid()) {
+				sol::error err = result;
+				std::cout << "Lua error: " << err.what() << std::endl;
+			}
+		} else {
+			std::cout << "Lua function '_init' not defined!\n";
+		}
+	}
+}
+
+void RunLuaCode(const std::string& code)
+{
+	sol::protected_function_result result = lua.safe_script(code, sol::script_pass_on_error);
+
+	if (!result.valid())
+	{
+		sol::error err = result;
+		std::cout << "Lua error caught: " << err.what() << std::endl;
+	}
 
 	running = !running;
 	ran_lua = true;
 }
-void restart_game()
+
+void RestartGame()
 {
-	pos = {0, 0};
-	setup_lua();
+	SetUpLua();
 }
+
 EMSCRIPTEN_BINDINGS(module_bindings)
 {
-	emscripten::function("LuaIsRunning", &lua_is_running);
-    emscripten::function("RunLua", &run_lua);
-	emscripten::function("SetGame", &set_game);
-	emscripten::function("RestartGame", &restart_game);
+	emscripten::function("cpp_lua_is_running", &LuaIsRunning);
+	emscripten::function("cpp_run_lua_code", &RunLuaCode);
+	emscripten::function("cpp_set_lua_game_loop", &SetLuaGameLoop);
+	emscripten::function("cpp_restart_game", &RestartGame);
 }
 
 void UpdateDrawFrame();
@@ -84,16 +118,14 @@ int main() {
 	std::cout << "=== opening a state ===" << std::endl;
 
     InitWindow(WIDTH, HEIGHT, "raylib [core] example - basic window");
-	setup_lua();
+	SetUpLua();
 
 	#if defined(PLATFORM_WEB)
     	emscripten_set_main_loop(UpdateDrawFrame, 0, 1);
 	#else
-		SetTargetFPS(60);   // Set our game to run at 60 frames-per-second
-		//--------------------------------------------------------------------------------------
+		SetTargetFPS(60);
 
-		// Main game loop
-		while (!WindowShouldClose())    // Detect window close button or ESC key
+		while (!WindowShouldClose())
 		{
 			UpdateDrawFrame();
 		}
@@ -104,29 +136,41 @@ int main() {
     return 0;
 }
 
-
 void UpdateDrawFrame()
 {
-	BeginDrawing();
-	
-	ClearBackground(RAYWHITE);
 	if (ran_lua && running)
 	{
-		if (game.valid())
+		if (lua_game_loop_update.valid())
 		{
-			sol::protected_function_result result = game();
+			sol::protected_function_result result = lua_game_loop_update();
+
 			if (!result.valid()) {
 				sol::error err = result;
 				std::cout << "Lua error: " << err.what() << std::endl;
 			}
 		} else {
-			std::cout << "Lua function run_game not defined!\n";
+			std::cout << "Lua function '_update' not defined!\n";
 		}
 	}
 
-    DrawRectangleV(pos, {50, 50}, RED);
+	BeginDrawing();
 
-	DrawText("Raylib Game template!", 100, 100, 20, BLACK);
+	ClearBackground(RAYWHITE);
+
+	if (ran_lua && running)
+	{
+		if (lua_game_loop_draw.valid())
+		{
+			sol::protected_function_result result = lua_game_loop_draw();
+
+			if (!result.valid()) {
+				sol::error err = result;
+				std::cout << "Lua error: " << err.what() << std::endl;
+			}
+		} else {
+			std::cout << "Lua function '_draw' not defined!\n";
+		}
+	}
 
 	if (GuiButton({200, 200, 100, 30}, "#32# PRESS ME NOW!"))
 	{
