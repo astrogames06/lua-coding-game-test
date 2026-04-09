@@ -17,6 +17,7 @@
 #endif
 
 #include "lua_definition.hpp"
+#include "sprite.hpp"
 
 sol::state lua;
 sol::function lua_game_loop_init;
@@ -102,6 +103,17 @@ void RunLuaCode(const std::string& code)
 void RestartGame()
 {
 	SetUpLua();
+	for (int i = 0; i < sprites.size(); i++)
+	{
+		Sprite* sprite = sprites[i];
+		sprite->x = sprite->original_x;
+		sprite->y = sprite->original_y;
+
+		if (sprite->is_added)
+		{
+			sprites.erase(sprites.begin() + i);
+		}
+	}
 }
 
 EMSCRIPTEN_BINDINGS(module_bindings)
@@ -114,11 +126,16 @@ EMSCRIPTEN_BINDINGS(module_bindings)
 
 void UpdateDrawFrame();
 
+Texture player_tex;
 int main() {
 	std::cout << "=== opening a state ===" << std::endl;
 
     InitWindow(WIDTH, HEIGHT, "raylib [core] example - basic window");
 	SetUpLua();
+
+	Sprite player = Sprite("player", 50, 50);
+	player_tex = LoadTexture("images/player.png");
+	sprites.push_back(&player);
 
 	#if defined(PLATFORM_WEB)
     	emscripten_set_main_loop(UpdateDrawFrame, 0, 1);
@@ -170,6 +187,11 @@ void UpdateDrawFrame()
 		} else {
 			std::cout << "Lua function '_draw' not defined!\n";
 		}
+	}
+
+	for (Sprite* sprite : sprites)
+	{
+		DrawTexture(player_tex, sprite->x, sprite->y, WHITE);
 	}
 
 	if (GuiButton({200, 200, 100, 30}, "#32# PRESS ME NOW!"))

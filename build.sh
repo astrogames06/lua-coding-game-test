@@ -1,1 +1,1 @@
-em++ main.cpp -o index.js -std=c++17 -Os -Wall  ./lib/libraylib.web.a -I. -I include/ -L. -L lib/ -llua -lembind -s USE_GLFW=3 -DPLATFORM_WEB
+em++ main.cpp -o index.js -std=c++17 -Os -Wall  ./lib/libraylib.web.a -I. -I include/ -L. -L lib/ -llua -lembind -s USE_GLFW=3 --preload-file images/ -DPLATFORM_WEB
